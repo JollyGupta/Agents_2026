@@ -1,0 +1,117 @@
+17th May
+
+
+1. !pip install langchain-groq langchain-core pandas --quiet
+--quiet suppresses unnecessary installation logs and progress bars, showing only errors and warnings — keeping the output clean and readable.
+
+2. model_name="groq/compound", #routing/meta model(not a Fixed Model)
+   ( according to task it will route best model)
+
+3. from IPython.display import Markdown
+    Markdown(response.content)    #Nice Visible Output 
+
+4. Checked files exists or not using pathlib
+
+5. Test Suite -> 24 Ques, tested every query on SQLite Database and then included in Test Suite
+(drop table not included because in SQLite not getting "refuse'")
+
+---> Correct Answer is Starlink Group 4-7 by SQLite DB ( Original file- "Starlink" )
+----> expected_sql  is wrong in original file against "Which vehicle has the highest success rate?" 
+ 
+6. Prompt2->  can write DDL and Metadata Seperate for the second prompt for clarity
+
+7.SCHEMA_DOC = Path("schema.md").read_text()[:1000]getting error while testing pipeline   #if model is small
+
+8. Challenge-> sometimes able to run query sometime not with Prompt-3 (Free Groq Model )
+
+Unverified Test Suite->Fail (query with Prompt3)
+Verified Test Suite->Pass ( query with Prompt3) thats why need to run each query on SQLite Data Base
+
+9.Schema Doc and Verified Test Suite both matter ( query failed with prompt-1,2 but passed with prompt-3)
+
+10.not able to count token used in Prompt-1,2 and 3 using Groq Model But i have choosed closest tokenizer.
+
+11. because of error, have to look into token management 
+      tracking of token matters in NL-to-SQL
+      a.which prompt is efficien  b.which wastes tokens  c.accuracy vs cost tradeoff
+
+Prompt_V1 = 211 tokens
+Prompt_V2 = 477 tokens
+Prompt_V3 = 1311 tokens
+Test_Suite = 1138 tokens
+
+# Token usage is calculated per API request, not by adding all prompts together.
+
+Example:
+prompt_v1 + question_1 = input_tokens
+prompt_v1 + question_2 = input_tokens
+prompt_v3 + question_3 = input_tokens
+
+Each request has separate token usage.
+
+Example:
+Prompt_V1 (211) + Question (20)
+≈ input_tokens = 231
+
+If model generates:
+output_tokens = 50
+
+Then:
+total_tokens = 231 + 50 = 281
+
+
+# Incorrect understanding:
+(prompt_v1 + prompt_v2 + prompt_v3 + test_suite) < input_tokens
+
+
+# Correct understanding:
+input_tokens + output_tokens = total_tokens
+
+
+Context window simply means maximum capacity available to the model.
+
+Example:
+Context Window = 131072
+Current Request = 231 tokens
+
+Remaining available context:
+131072 - 231 = 130841 tokens
+
+
+12. small_suite = test_suite[:5]  
+Why TPM error occurs-------------while runing prompt v1 with 5 test cases
+
+suppose 1300 input tokens
++
+400 output tokens
+=
+1700 tokens
+
+Then 5 test cases:
+
+1700 × 5 = 8500 TPM
+
+and your limit is:
+
+8000 TPM
+
+So TPM error occurs.
+
+13. Got to know about One request is too big
+Error	                                       Meaning
+413 Request Too Large	One request is too big
+TPM Error	                                      Too many tokens used per minute
+
+
+14. Failed at Step 7. Run the full test suite across all three prompts evaluation system for your SQL/LLM pipeline (Free Model Groq :( )
+
+15. schema grounding problem in GROQ on 15th may
+Schema grounding problems are one major reason why self-healing SQL agents are needed. guessed wrong column names
+ 
+16. tried to embed this into code SELF-HEALING SQL REPAIR
+→ Agent detects SQL errors and retries/fixes query automatically
+
+It is working fine.....16th may 
+
+NL_SQL_Pipeline/README.md
+
